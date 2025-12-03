@@ -11,16 +11,44 @@
       background: #f7f7f7;
       color: #111111;
     }
+
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .topbar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 10px 16px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #777777;
+    }
+    .tb-left {
+      font-weight: 600;
+      color: #111111;
+    }
+    .tb-right {
+      opacity: 0.7;
+      text-align: right;
+    }
+
     .page {
       max-width: 1080px;
       margin: 0 auto;
-      padding: 24px 16px 60px;
+      padding: 18px 16px 60px;
     }
     header {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-bottom: 18px;
+      gap: 10px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ececec;
+      padding-bottom: 12px;
     }
     .logo {
       font-size: 22px;
@@ -40,8 +68,9 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 10px;
+      margin-top: 6px;
       align-items: center;
+      justify-content: space-between;
     }
     .filters {
       display: flex;
@@ -55,13 +84,14 @@
       font-size: 12px;
       background: #ffffff;
       cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
       white-space: nowrap;
     }
     .filter-btn.active {
       background: #111111;
       color: #ffffff;
       border-color: #111111;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
     }
 
     .search {
@@ -79,12 +109,13 @@
     }
     .search input:focus {
       border-color: #111111;
+      box-shadow: 0 0 0 1px #1111110d;
     }
 
     .meta {
       font-size: 11px;
       color: #999999;
-      margin: 6px 0 12px;
+      margin: 8px 0 14px;
     }
     .grid {
       display: grid;
@@ -100,6 +131,13 @@
       display: flex;
       flex-direction: column;
       min-height: 140px;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+      border-color: #d5d5d5;
     }
     .card-inner {
       display: flex;
@@ -198,19 +236,123 @@
       border-top: 1px solid #e2e2e2;
       padding-top: 12px;
     }
+
+    /* LIGHTBOX / ГАЛЕРЕЯ */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .lightbox.visible {
+      display: flex;
+    }
+    .lightbox-inner {
+      background: #000000;
+      border-radius: 14px;
+      max-width: 92vw;
+      max-height: 92vh;
+      padding: 10px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+    }
+    .lightbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #ffffff;
+      font-size: 12px;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+    .lb-title {
+      font-weight: 500;
+      font-size: 13px;
+    }
+    .lb-ref {
+      opacity: 0.7;
+      font-size: 11px;
+    }
+    .lightbox-img-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 70vh;
+      margin-bottom: 6px;
+    }
+    .lightbox-img-wrap img {
+      max-width: 100%;
+      max-height: 70vh;
+      display: block;
+    }
+    .lightbox-caption {
+      color: #ffffff;
+      font-size: 11px;
+      opacity: 0.8;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .lightbox-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #ffffff;
+      font-size: 11px;
+      gap: 6px;
+    }
+    .lb-btn {
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #ffffff;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      opacity: 0.85;
+    }
+    .lb-btn.primary {
+      border: 1px solid rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.06);
+    }
+    .lb-btn:hover {
+      opacity: 1;
+    }
+    .lb-index {
+      opacity: 0.7;
+    }
+
     @media (max-width: 600px) {
-      .page { padding: 18px 12px 40px; }
+      .page { padding: 16px 12px 40px; }
+      .topbar-inner { padding-inline: 12px; font-size: 10px; }
       header { gap: 8px; }
-      .card-inner { flex-direction: row; }
+      .lightbox-inner {
+        max-width: 96vw;
+        max-height: 94vh;
+      }
+      .lightbox-img-wrap img {
+        max-height: 64vh;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="tb-left">SART JEWELS</div>
+      <div class="tb-right">PRIVATE STOCK · MOSCOW</div>
+    </div>
+  </div>
+
   <div class="page">
     <header>
       <div class="logo"><span>SART</span> JEWELS</div>
       <div class="subtitle">
-        Актуальный сток часов и ювелирных изделий. Только оригинал, новые позиции со свежей датой.
+        Актуальный сток часов и ювелирных изделий. Только оригинал с проверяемой историей.
         В наличии в Москве, возможна проверка в сервис-центре. Цены указаны в долларах США.
       </div>
       <div class="top-row">
@@ -240,44 +382,37 @@
     </footer>
   </div>
 
+  <!-- LIGHTBOX / ГАЛЕРЕЯ -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-inner">
+      <div class="lightbox-header">
+        <div>
+          <div class="lb-title" id="lb-title"></div>
+          <div class="lb-ref" id="lb-ref"></div>
+        </div>
+        <button class="lb-btn" id="lb-close">Закрыть ✕</button>
+      </div>
+      <div class="lightbox-img-wrap">
+        <img id="lb-img" src="" alt="" />
+      </div>
+      <div class="lightbox-caption" id="lb-caption"></div>
+      <div class="lightbox-controls">
+        <button class="lb-btn primary" id="lb-prev">← Предыдущее</button>
+        <div class="lb-index" id="lb-index"></div>
+        <button class="lb-btn primary" id="lb-next">Следующее →</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // === 1. Настройки Google Sheets (на будущее) ===
-    // Когда сделаем таблицу и опубликуем её в CSV,
-    // сюда вставишь её CSV-ссылку вида:
-    // https://docs.google.com/spreadsheets/d/ID/export?format=csv
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQQWmPmYviO64ky1rYJn1CRfUfYtcp8xVO3vg_gm8qVB4fZJEumVPxjm1DkYCOtRWaXvRA2hvNY4mv/pub?gid=0&single=true&output=csv"; // пока пусто — берём локальный сток
+    // 1. ССЫЛКА НА GOOGLE SHEETS (CSV)
+    // ВСТАВЬ СЮДА свою working CSV-ссылку из таблицы
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/18wrgkSEC7SIc0BiZfgXlOMfLuKOHmwjltW5L7lXTMfs/edit?usp=sharing";
 
-    // === 2. Локальный сток (будет использован, пока SHEET_CSV_URL пустой или недоступен) ===
+    // 2. ЛОКАЛЬНЫЙ СТОК — РЕЗЕРВ, если таблица недоступна
     const localProducts = [
-      // Rolex — два лота одной модели с разной ценой
-      { id: "r-126233-1", brand: "Rolex", ref: "126233VI", name: "Datejust 36, green dial", year: "2023", condition: "New",      set: "Full set",      price: "19 900 $", status: "in_stock", image: "https://media.rolex.com/image/upload/q_auto:eco/f_auto/t_v7-majesty/c_limit,w_1920/v1/catalogue/2025/upright-c/m126333-0010.jpg" },
-      { id: "r-126233-2", brand: "Rolex", ref: "126233VI", name: "Datejust 36, green dial", year: "2021", condition: "Like new", set: "Box + papers", price: "17 900 $", status: "in_stock", image: "" },
-
-      { id: "r-126603-1",      brand: "Rolex", ref: "126603",      name: "Sea-Dweller, black",                      year: "2023", condition: "New", set: "Full set", price: "21 000 $", status: "in_stock", image: "" },
-      { id: "r-126234-1",      brand: "Rolex", ref: "126234",      name: "Datejust 36, blue dial",                  year: "2022", condition: "New", set: "Full set", price: "12 900 $", status: "in_stock", image: "" },
-      { id: "r-278274vi-1",    brand: "Rolex", ref: "278274VI",    name: "Datejust 31, blue dial",                  year: "2023", condition: "New", set: "Full set", price: "12 500 $", status: "in_stock", image: "" },
-      { id: "r-277200-1",      brand: "Rolex", ref: "277200",      name: "Oyster Perpetual, pistachio",             year: "2023", condition: "New", set: "Full set", price: "10 000 $", status: "in_stock", image: "" },
-      { id: "r-126234vi-1",    brand: "Rolex", ref: "126234VI",    name: "Datejust 36, purple dial",                year: "2023", condition: "New", set: "Full set", price: "14 900 $", status: "in_stock", image: "" },
-      { id: "r-126300-1",      brand: "Rolex", ref: "126300",      name: "Datejust 41, blue Roman",                 year: "2023", condition: "New", set: "Full set", price: "12 000 $", status: "in_stock", image: "" },
-      { id: "r-126622-1",      brand: "Rolex", ref: "126622",      name: "Yacht-Master 40, blue",                   year: "2023", condition: "New", set: "Full set", price: "15 100 $", status: "in_stock", image: "" },
-      { id: "r-136660-1",      brand: "Rolex", ref: "136660",      name: "Deepsea, D-Blue",                         year: "2023", condition: "New", set: "Full set", price: "16 700 $", status: "in_stock", image: "" },
-      { id: "r-126300-wim-1",  brand: "Rolex", ref: "126300",      name: "Datejust 41, Wimbledon",                  year: "2023", condition: "New", set: "Full set", price: "12 000 $", status: "in_stock", image: "" },
-      { id: "r-126331-wim-1",  brand: "Rolex", ref: "126331",      name: "Datejust 41, Wimbledon",                  year: "2023", condition: "New", set: "Full set", price: "19 000 $", status: "in_stock", image: "" },
-      { id: "r-126333-1",      brand: "Rolex", ref: "126333",      name: "Datejust 41, black",                      year: "2023", condition: "New", set: "Full set", price: "18 700 $", status: "in_stock", image: "" },
-
-      // Cartier
-      { id: "c-wjba0050-1",    brand: "Cartier", ref: "WJBA0050",  name: "Baignoire Watch",                         year: "2023", condition: "New", set: "Full set", price: "21 300 $", status: "in_stock", image: "" },
-      { id: "c-wgba0041-1",    brand: "Cartier", ref: "WGBA0041",  name: "Baignoire Watch",                         year: "2023", condition: "New", set: "Full set", price: "8 200 $",  status: "in_stock", image: "" },
-      { id: "c-wjpn0063-1",    brand: "Cartier", ref: "WJPN0063",  name: "Panthère de Cartier Watch",               year: "2023", condition: "New", set: "Full set", price: "33 000 $", status: "in_stock", image: "" },
-      { id: "c-wjpn0059-1",    brand: "Cartier", ref: "WJPN0059",  name: "Panthère de Cartier Watch",               year: "2023", condition: "New", set: "Full set", price: "41 000 $", status: "in_stock", image: "" },
-      { id: "c-wjpn0061-1",    brand: "Cartier", ref: "WJPN0061",  name: "Panthère de Cartier Watch",               year: "2023", condition: "New", set: "Full set", price: "41 000 $", status: "in_stock", image: "" },
-      { id: "c-b6084016-1",    brand: "Cartier", ref: "B6084016",  name: "Juste un Clou Bracelet, diamonds",        year: "2023", condition: "New", set: "Full set", price: "6 500 $",  status: "in_stock", image: "" },
-
-      // Graff
-      { id: "g-butterfly-ring-1",    brand: "Graff", ref: "Butterfly Ring",     name: "Classic Butterfly Petite Diamond Ring, white gold",      year: "2023", condition: "New", set: "Full set", price: "12 250 $", status: "in_stock", image: "" },
-      { id: "g-cross-medium-1",      brand: "Graff", ref: "Cross Medium",       name: "Round Diamond Cross Medium Pendant, white gold",         year: "2023", condition: "New", set: "Full set", price: "11 500 $", status: "in_stock", image: "" },
-      { id: "g-cross-small-1",       brand: "Graff", ref: "Cross Small",        name: "Round Diamond Cross Small Pendant, white gold",         year: "2023", condition: "New", set: "Full set", price: "6 400 $",  status: "in_stock", image: "" },
-      { id: "g-butterfly-necklace-1",brand: "Graff", ref: "Butterfly Necklace", name: "Classic Butterfly Petite Diamond Necklace, white gold", year: "2023", condition: "New", set: "Full set", price: "28 700 $", status: "in_stock", image: "" }
+      { id: "r-126233-1", brand: "Rolex", ref: "126233VI", name: "Datejust 36 · green dial", year: "2023", condition: "New", set: "Full set", price: "19 900 $", status: "in_stock", image: "" }
+      // Остальные можешь не заполнять: это fallback
     ];
 
     let products = [];
@@ -289,10 +424,34 @@
     const metaInfo = document.getElementById("meta-info");
     const searchInput = document.getElementById("search-input");
 
-    // === 3. Загрузка из Google Sheets (если указана SHEET_CSV_URL) ===
+    // Элементы лайтбокса
+    const lightbox = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lb-img");
+    const lbTitle = document.getElementById("lb-title");
+    const lbRef = document.getElementById("lb-ref");
+    const lbCaption = document.getElementById("lb-caption");
+    const lbIndex = document.getElementById("lb-index");
+    const lbClose = document.getElementById("lb-close");
+    const lbPrev = document.getElementById("lb-prev");
+    const lbNext = document.getElementById("lb-next");
+
+    let currentImages = [];
+    let currentImageIndex = 0;
+
+    function normalizeProducts(list) {
+      return list.map((p, idx) => {
+        if (!p.id || !p.id.trim()) {
+          const baseBrand = (p.brand || "item").toLowerCase().replace(/\s+/g, "-");
+          const baseRef = (p.ref || "ref").toLowerCase().replace(/\s+/g, "-");
+          p.id = `auto-${baseBrand}-${baseRef}-${idx + 1}`;
+        }
+        return p;
+      });
+    }
+
     async function loadFromSheet() {
-      if (!SHEET_CSV_URL) {
-        products = localProducts;
+      if (!SHEET_CSV_URL || SHEET_CSV_URL === "ПОДСТАВЬ_СЮДА_СВОЮ_CSV_ССЫЛКУ") {
+        products = normalizeProducts(localProducts);
         applyFilters();
         return;
       }
@@ -301,46 +460,48 @@
         const text = await res.text();
         const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
         const header = lines.shift().split(",");
+
         const getIndex = name => header.indexOf(name);
 
         const idx = {
-          id: getIndex("id"),
-          brand: getIndex("brand"),
-          ref: getIndex("ref"),
-          name: getIndex("name"),
-          year: getIndex("year"),
+          id:        getIndex("id"),
+          brand:     getIndex("brand"),
+          ref:       getIndex("ref"),
+          name:      getIndex("name"),
+          year:      getIndex("year"),
           condition: getIndex("condition"),
-          set: getIndex("set"),
-          price: getIndex("price"),
-          status: getIndex("status"),
-          image: getIndex("image")
+          set:       getIndex("set"),
+          price:     getIndex("price"),
+          status:    getIndex("status"),
+          image:     getIndex("image")
         };
 
-        products = lines.map(line => {
-          const cols = line.split(","); // важно: не использовать запятые внутри полей
-          return {
-            id:       cols[idx.id]       ? cols[idx.id].trim()       : "",
-            brand:    cols[idx.brand]    ? cols[idx.brand].trim()    : "",
-            ref:      cols[idx.ref]      ? cols[idx.ref].trim()      : "",
-            name:     cols[idx.name]     ? cols[idx.name].trim()     : "",
-            year:     cols[idx.year]     ? cols[idx.year].trim()     : "",
-            condition:cols[idx.condition]? cols[idx.condition].trim(): "",
-            set:      cols[idx.set]      ? cols[idx.set].trim()      : "",
-            price:    cols[idx.price]    ? cols[idx.price].trim()    : "",
-            status:   cols[idx.status]   ? cols[idx.status].trim()   : "",
-            image:    cols[idx.image]    ? cols[idx.image].trim()    : ""
+        const parsed = lines.map((line, rowIndex) => {
+          const cols = line.split(","); // поэтому внутри ячеек НЕ должно быть запятых
+          const obj = {
+            id:        idx.id        >= 0 ? (cols[idx.id]        || "").trim() : "",
+            brand:     idx.brand     >= 0 ? (cols[idx.brand]     || "").trim() : "",
+            ref:       idx.ref       >= 0 ? (cols[idx.ref]       || "").trim() : "",
+            name:      idx.name      >= 0 ? (cols[idx.name]      || "").trim() : "",
+            year:      idx.year      >= 0 ? (cols[idx.year]      || "").trim() : "",
+            condition: idx.condition >= 0 ? (cols[idx.condition] || "").trim() : "",
+            set:       idx.set       >= 0 ? (cols[idx.set]       || "").trim() : "",
+            price:     idx.price     >= 0 ? (cols[idx.price]     || "").trim() : "",
+            status:    idx.status    >= 0 ? (cols[idx.status]    || "").trim() : "",
+            image:     idx.image     >= 0 ? (cols[idx.image]     || "").trim() : ""
           };
+          return obj;
         });
 
+        products = normalizeProducts(parsed);
         applyFilters();
       } catch (e) {
         console.error("Ошибка загрузки Google Sheets, используем локальный сток", e);
-        products = localProducts;
+        products = normalizeProducts(localProducts);
         applyFilters();
       }
     }
 
-    // === 4. Фильтрация по бренду + поиску ===
     function applyFilters() {
       grid.innerHTML = "";
 
@@ -349,7 +510,6 @@
       const visible = products.filter(p => {
         if (p.status !== "in_stock") return false;
         if (currentBrand !== "all" && p.brand !== currentBrand) return false;
-
         if (q) {
           const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
           if (!haystack.includes(q)) return false;
@@ -363,7 +523,7 @@
         return;
       }
 
-      metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.` ;
+      metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.`;
 
       visible.forEach(p => {
         const card = document.createElement("div");
@@ -375,12 +535,20 @@
           "Комплект: " + (p.set || "—")
         ].join(" · ");
 
-        const hasImage = p.image && p.image.length > 3;
+        const images = (p.image || "")
+          .split("|")
+          .map(x => x.trim())
+          .filter(x => x.length > 3);
+
+        const hasImage = images.length > 0;
+        const thumbHtml = hasImage
+          ? `<img src="${images[0]}" alt="${p.name}">`
+          : "Фото<br>по запросу";
 
         card.innerHTML = `
           <div class="card-inner">
             <div class="thumb ${hasImage ? "" : "empty-text"}">
-              ${hasImage ? `<img src="${p.image}" alt="${p.name}">` : "Фото<br>по запросу"}
+              ${thumbHtml}
             </div>
             <div class="card-body">
               <div>
@@ -398,11 +566,92 @@
             </div>
           </div>
         `;
+
+        card.addEventListener("click", () => {
+          if (!hasImage) {
+            openLightbox(p, []); // покажем просто текст
+          } else {
+            openLightbox(p, images);
+          }
+        });
+
         grid.appendChild(card);
       });
     }
 
-    // === 5. Обработчики фильтров и поиска ===
+    function openLightbox(product, images) {
+      currentImages = images;
+      currentImageIndex = 0;
+
+      lbTitle.textContent = product.brand + " · " + product.name;
+      lbRef.textContent = product.ref ? "Ref: " + product.ref : "";
+      lbCaption.textContent = [
+        product.year ? "Год: " + product.year : "",
+        product.condition ? "Состояние: " + product.condition : "",
+        product.set ? "Комплект: " + product.set : ""
+      ].filter(Boolean).join(" · ");
+
+      if (currentImages.length === 0) {
+        lbImg.src = "";
+        lbImg.alt = "";
+        lbIndex.textContent = "Фото по запросу";
+        lbPrev.style.visibility = "hidden";
+        lbNext.style.visibility = "hidden";
+      } else {
+        showLightboxImage(0);
+        lbPrev.style.visibility = currentImages.length > 1 ? "visible" : "hidden";
+        lbNext.style.visibility = currentImages.length > 1 ? "visible" : "hidden";
+      }
+
+      lightbox.classList.add("visible");
+    }
+
+    function showLightboxImage(index) {
+      if (!currentImages.length) return;
+      if (index < 0) index = currentImages.length - 1;
+      if (index >= currentImages.length) index = 0;
+      currentImageIndex = index;
+
+      lbImg.src = currentImages[currentImageIndex];
+      lbImg.alt = "";
+      lbIndex.textContent = `${currentImageIndex + 1} / ${currentImages.length}`;
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("visible");
+      currentImages = [];
+      currentImageIndex = 0;
+    }
+
+    lbClose.addEventListener("click", closeLightbox);
+    lbPrev.addEventListener("click", () => {
+      if (currentImages.length > 1) {
+        showLightboxImage(currentImageIndex - 1);
+      }
+    });
+    lbNext.addEventListener("click", () => {
+      if (currentImages.length > 1) {
+        showLightboxImage(currentImageIndex + 1);
+      }
+    });
+
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!lightbox.classList.contains("visible")) return;
+      if (e.key === "Escape") {
+        closeLightbox();
+      } else if (e.key === "ArrowLeft") {
+        if (currentImages.length > 1) showLightboxImage(currentImageIndex - 1);
+      } else if (e.key === "ArrowRight") {
+        if (currentImages.length > 1) showLightboxImage(currentImageIndex + 1);
+      }
+    });
+
     filterButtons.forEach(btn => {
       btn.addEventListener("click", () => {
         filterButtons.forEach(b => b.classList.remove("active"));
@@ -417,7 +666,6 @@
       applyFilters();
     });
 
-    // Старт
     loadFromSheet();
   </script>
 </body>
