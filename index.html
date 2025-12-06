@@ -589,25 +589,128 @@
     }
 
     function applyFilters() {
-      grid.innerHTML = "";
+  grid.innerHTML = "";
 
-      const q = currentQuery.toLowerCase().trim();
+  const q = currentQuery.toLowerCase().trim();
 
-      const visible = products.filter(p => {
-        if (p.status !== "in_stock") return false;
-        if (currentBrand !== "all" && p.brand !== currentBrand) return false;
-        if (q) {
-          const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
-          if (!haystack.includes(q)) return false;
-        }
-        return true;
-      });
+  const visible = products.filter(p => {
+    if (p.status !== "in_stock") return false;
+    if (currentBrand !== "all" && p.brand !== currentBrand) return false;
+    if (q) {
+      const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
 
-      if (visible.length === 0) {
-        grid.innerHTML = "<div style='font-size:13px;color:#888;'>Нет лотов в наличии по заданным условиям.</div>";
-        metaInfo.textContent = "Ничего не найдено. Проверьте фильтр бренда или запрос в поиске.";
+  if (visible.length === 0) {
+    grid.innerHTML = "<div style='font-size:13px;color:#888;'>Нет лотов в наличии по заданным условиям.</div>";
+    metaInfo.textContent = "Ничего не найдено. Проверьте фильтр бренда или запрос в поиске.";
+    return;
+  }
+
+  metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.`;
+
+  visible.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const detailsLine = [
+      "Год: " + (p.year || "—"),
+      "Состояние: " + (p.condition || "—"),
+      "Комплект: " + (p.set || "—")
+    ].join(" · ");
+
+    const images = (p.image || "")
+      .split("|")
+      .map(x => x.trim())
+      .filter(x => x.length > 3);
+
+    const hasImage = images.length > 0;
+    const thumbHtml = hasImage
+      ? `<img src="${images[0]}" alt="${p.name}">`
+      : "Фото<br>по запросу";
+
+    // сообщение для кнопки "Уточнить"
+    const message = encodeURIComponent(
+      "Здравствуйте! Хочу уточнить и, при возможности, забронировать позицию:\n\n" +
+      `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
+      (p.id ? `ID: ${p.id}\n` : "") +
+      (p.year ? `Год: ${p.year}\n` : "") +
+      (p.condition ? `Состояние: ${p.condition}\n` : "") +
+      (p.set ? `Комплект: ${p.set}\n` : "") +
+      (p.price ? `Цена: ${p.price}\n` : "") +
+      "\nГотов выехать сегодня при согласовании.\n" +
+      "Ссылка на сток: https://sartjew.github.io/stock/"
+    );
+
+    const telegramUrl = `https://t.me/TheSart?text=${message}`;
+    const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
+
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="thumb ${hasImage ? "" : "empty-text"}">
+          ${thumbHtml}
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="card-header">
+              <div class="brand">${p.brand}</div>
+              <div class="ref">${p.ref}</div>
+            </div>
+            <div class="name">${p.name}</div>
+            <div class="lot-meta">${detailsLine}</div>
+          </div>
+          <div>
+            <div class="price-row">
+              <div class="price">${p.price}</div>
+              <div class="status">в наличии</div>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn-inquire">Уточнить</button>
+              <div class="contact-menu">
+                <a href="${telegramUrl}" target="_blank" class="contact-link">Telegram</a>
+                <a href="${whatsappUrl}" target="_blank" class="contact-link">WhatsApp</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const inquireBtn = card.querySelector(".btn-inquire");
+    const contactMenu = card.querySelector(".contact-menu");
+
+    // клик по карточке — открываем лайтбокс, НО игнорируем клики по кнопке/меню
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".btn-inquire") || e.target.closest(".contact-menu")) {
         return;
       }
+      if (!hasImage) {
+        openLightbox(p, []);
+      } else {
+        openLightbox(p, images);
+      }
+    });
+
+    // клик по "Уточнить" — только открывает/закрывает меню
+    inquireBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = contactMenu.classList.contains("open");
+      document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
+      if (!isOpen) {
+        contactMenu.classList.add("open");
+      }
+    });
+
+    // клики внутри меню — не всплывают наверх
+    contactMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    grid.appendChild(card);
+  });
+}
 
       metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.`;
 
@@ -773,7 +876,11 @@ const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
       currentQuery = searchInput.value;
       applyFilters();
     });
-
+// Закрыть меню Telegram/WhatsApp при клике в любое место
+document.addEventListener("click", () => {
+  document.querySelectorAll(".contact-menu.open")
+    .forEach(m => m.classList.remove("open"));
+});
     loadFromSheet();
   </script>
 </body>
