@@ -632,15 +632,10 @@ function applyFilters() {
       : "Фото<br>по запросу";
 
     const message = encodeURIComponent(
-      "Здравствуйте! Хочу уточнить и, при возможности, забронировать позицию:\n\n" +
+      "Данил, привет! Хочу уточнить по наличию:\n\n" +
       `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
-      (p.id ? `ID: ${p.id}\n` : "") +
-      (p.year ? `Год: ${p.year}\n` : "") +
-      (p.condition ? `Состояние: ${p.condition}\n` : "") +
       (p.set ? `Комплект: ${p.set}\n` : "") +
-      (p.price ? `Цена: ${p.price}\n` : "") +
-      "\nГотов выехать сегодня при согласовании.\n" +
-      "Ссылка на сток: https://sartjew.github.io/stock/"
+      (p.price ? `Цена: ${p.price}\n` : "") 
     );
 
     const telegramUrl = `https://t.me/TheSart?text=${message}`;
