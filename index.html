@@ -249,6 +249,67 @@
       color: #b71c1c;
       background: #ffebee;
     }
+    
+    /* КНОПКА "УТОЧНИТЬ" + МЕНЮ КОНТАКТОВ */
+.card-actions {
+  margin-top: 8px;
+  position: relative;
+}
+
+.btn-inquire {
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #cccccc;
+  background: #fafafa;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.btn-inquire:hover {
+  background: #f0f0f0;
+  border-color: #999999;
+  transform: translateY(-1px);
+}
+
+.contact-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 6px 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  display: none;
+  gap: 6px;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.contact-menu.open {
+  display: flex;
+}
+
+.contact-link {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #dddddd;
+  text-decoration: none;
+  color: #333333;
+  background: #f9f9f9;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.contact-link:hover {
+  background: #f0f0f0;
+  border-color: #aaaaaa;
+  transform: translateY(-1px);
+}
+    
     footer {
       margin-top: 32px;
       font-size: 11px;
@@ -570,28 +631,50 @@
           ? `<img src="${images[0]}" alt="${p.name}">`
           : "Фото<br>по запросу";
 
-        card.innerHTML = `
-          <div class="card-inner">
-            <div class="thumb ${hasImage ? "" : "empty-text"}">
-              ${thumbHtml}
-            </div>
-            <div class="card-body">
-              <div>
-                <div class="card-header">
-                  <div class="brand">${p.brand}</div>
-                  <div class="ref">${p.ref}</div>
-                </div>
-                <div class="name">${p.name}</div>
-                <div class="lot-meta">${detailsLine}</div>
-              </div>
-              <div class="price-row">
-                <div class="price">${p.price}</div>
-                <div class="status">в наличии</div>
-              </div>
-            </div>
-          </div>
-        `;
+const message = encodeURIComponent(
+  "Здравствуйте! Хочу уточнить и, при возможности, забронировать позицию:\n\n" +
+  `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
+  (p.id ? `ID: ${p.id}\n` : "") +
+  (p.year ? `Год: ${p.year}\n` : "") +
+  (p.condition ? `Состояние: ${p.condition}\n` : "") +
+  (p.set ? `Комплект: ${p.set}\n` : "") +
+  (p.price ? `Цена: ${p.price}\n` : "") +
+  "\nГотов выехать сегодня при согласовании.\n" +
+  "Ссылка на сток: https://sartjew.github.io/stock/"
+);
 
+const telegramUrl = `https://t.me/TheSart?text=${message}`;
+const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
+        card.innerHTML = `
+  <div class="card-inner">
+    <div class="thumb ${hasImage ? "" : "empty-text"}">
+      ${thumbHtml}
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="card-header">
+          <div class="brand">${p.brand}</div>
+          <div class="ref">${p.ref}</div>
+        </div>
+        <div class="name">${p.name}</div>
+        <div class="lot-meta">${detailsLine}</div>
+      </div>
+      <div>
+        <div class="price-row">
+          <div class="price">${p.price}</div>
+          <div class="status">в наличии</div>
+        </div>
+        <div class="card-actions">
+          <button type="button" class="btn-inquire">Уточнить</button>
+          <div class="contact-menu">
+            <a href="${telegramUrl}" target="_blank" class="contact-link">Telegram</a>
+            <a href="${whatsappUrl}" target="_blank" class="contact-link">WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
         card.addEventListener("click", () => {
           if (!hasImage) {
             openLightbox(p, []); // покажем просто текст
