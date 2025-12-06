@@ -588,7 +588,7 @@
       }
     }
 
-    function applyFilters() {
+function applyFilters() {
   grid.innerHTML = "";
 
   const q = currentQuery.toLowerCase().trim();
@@ -631,7 +631,6 @@
       ? `<img src="${images[0]}" alt="${p.name}">`
       : "Фото<br>по запросу";
 
-    // сообщение для кнопки "Уточнить"
     const message = encodeURIComponent(
       "Здравствуйте! Хочу уточнить и, при возможности, забронировать позицию:\n\n" +
       `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
@@ -681,7 +680,6 @@
     const inquireBtn = card.querySelector(".btn-inquire");
     const contactMenu = card.querySelector(".contact-menu");
 
-    // клик по карточке — открываем лайтбокс, НО игнорируем клики по кнопке/меню
     card.addEventListener("click", (e) => {
       if (e.target.closest(".btn-inquire") || e.target.closest(".contact-menu")) {
         return;
@@ -693,7 +691,6 @@
       }
     });
 
-    // клик по "Уточнить" — только открывает/закрывает меню
     inquireBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = contactMenu.classList.contains("open");
@@ -703,7 +700,6 @@
       }
     });
 
-    // клики внутри меню — не всплывают наверх
     contactMenu.addEventListener("click", (e) => {
       e.stopPropagation();
     });
@@ -711,84 +707,6 @@
     grid.appendChild(card);
   });
 }
-
-      metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.`;
-
-      visible.forEach(p => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const detailsLine = [
-          "Год: " + (p.year || "—"),
-          "Состояние: " + (p.condition || "—"),
-          "Комплект: " + (p.set || "—")
-        ].join(" · ");
-
-        const images = (p.image || "")
-          .split("|")
-          .map(x => x.trim())
-          .filter(x => x.length > 3);
-
-        const hasImage = images.length > 0;
-        const thumbHtml = hasImage
-          ? `<img src="${images[0]}" alt="${p.name}">`
-          : "Фото<br>по запросу";
-
-const message = encodeURIComponent(
-  "Здравствуйте! Хочу уточнить и, при возможности, забронировать позицию:\n\n" +
-  `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
-  (p.id ? `ID: ${p.id}\n` : "") +
-  (p.year ? `Год: ${p.year}\n` : "") +
-  (p.condition ? `Состояние: ${p.condition}\n` : "") +
-  (p.set ? `Комплект: ${p.set}\n` : "") +
-  (p.price ? `Цена: ${p.price}\n` : "") +
-  "\nГотов выехать сегодня при согласовании.\n" +
-  "Ссылка на сток: https://sartjew.github.io/stock/"
-);
-
-const telegramUrl = `https://t.me/TheSart?text=${message}`;
-const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
-        card.innerHTML = `
-  <div class="card-inner">
-    <div class="thumb ${hasImage ? "" : "empty-text"}">
-      ${thumbHtml}
-    </div>
-    <div class="card-body">
-      <div>
-        <div class="card-header">
-          <div class="brand">${p.brand}</div>
-          <div class="ref">${p.ref}</div>
-        </div>
-        <div class="name">${p.name}</div>
-        <div class="lot-meta">${detailsLine}</div>
-      </div>
-      <div>
-        <div class="price-row">
-          <div class="price">${p.price}</div>
-          <div class="status">в наличии</div>
-        </div>
-        <div class="card-actions">
-          <button type="button" class="btn-inquire">Уточнить</button>
-          <div class="contact-menu">
-            <a href="${telegramUrl}" target="_blank" class="contact-link">Telegram</a>
-            <a href="${whatsappUrl}" target="_blank" class="contact-link">WhatsApp</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
-        card.addEventListener("click", () => {
-          if (!hasImage) {
-            openLightbox(p, []); // покажем просто текст
-          } else {
-            openLightbox(p, images);
-          }
-        });
-
-        grid.appendChild(card);
-      });
-    }
 
     function openLightbox(product, images) {
       currentImages = images;
