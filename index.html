@@ -233,22 +233,37 @@
       margin-top: 4px;
     }
     .price { font-weight: 600; }
-    .status {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid #c8e6c9;
-      color: #2e7d32;
-      background: #e8f5e9;
-      white-space: nowrap;
-    }
-    .status.sold {
-      border-color: #ffcdd2;
-      color: #b71c1c;
-      background: #ffebee;
-    }
+    
+   .status {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid;
+}
+
+/* IN — зелёный */
+.status.in {
+  border-color: #c8e6c9;
+  color: #2e7d32;
+  background: #e8f5e9;
+}
+
+/* OUT — жёлтый */
+.status.out {
+  border-color: #ffe0b2;
+  color: #e65100;
+  background: #fff3e0;
+}
+
+/* RSV — красный */
+.status.rsv {
+  border-color: #ffcdd2;
+  color: #b71c1c;
+  background: #ffebee;
+}
     
     /* КНОПКА "УТОЧНИТЬ" + МЕНЮ КОНТАКТОВ */
 .card-actions {
@@ -541,9 +556,13 @@
     return (s || "").toString().trim();
   }
 
-  function normStatus(s) {
-    return norm(s).toLowerCase().replace(/\s+/g, "_");
-  }
+ function normStatus(s) {
+  const v = (s || "").toString().trim().toUpperCase();
+  if (v === "IN") return "in";
+  if (v === "OUT") return "out";
+  if (v === "RSV") return "rsv";
+  return "out"; // дефолт: если пусто/ошибка — считаем "под заказ"
+}
 
   function normalizeProducts(list) {
     return list.map((p, idx) => {
@@ -615,7 +634,6 @@
     const q = currentQuery.toLowerCase().trim();
 
     const visible = products.filter(p => {
-      if (p.status && p.status !== "in_stock") return false;
       if (currentBrand !== "all" && p.brand !== currentBrand) return false;
       if (q) {
         const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
@@ -661,6 +679,13 @@
 
       const telegramUrl = `https://t.me/TheSart?text=${message}`;
       const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
+      const statusMap = {
+  in:  { text: "в наличии", className: "in"  },
+  out: { text: "под заказ", className: "out" },
+  rsv: { text: "в резерве", className: "rsv" }
+};
+
+const st = statusMap[p.status] || statusMap.out;
 
       card.innerHTML = `
         <div class="card-inner">
@@ -677,7 +702,7 @@
             <div>
               <div class="price-row">
                 <div class="price">${p.price}</div>
-                <div class="status">в наличии</div>
+                <div class="status ${st.className}">${st.text}</div>
               </div>
               <div class="card-actions">
                 <button type="button" class="btn-inquire">Уточнить</button>
@@ -694,18 +719,26 @@
       const inquireBtn = card.querySelector(".btn-inquire");
       const contactMenu = card.querySelector(".contact-menu");
 
-      card.addEventListener("click", (e) => {
-        if (e.target.closest(".btn-inquire") || e.target.closest(".contact-menu")) return;
+    card.addEventListener("click", (e) => {
+  if (e.target.closest(".btn-inquire") || e.target.closest(".contact-menu")) return;
 
-        // если фото нет — сразу открыть контакты, а не пустой lightbox
-        if (!hasImage) {
-          document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
-          contactMenu.classList.add("open");
-          return;
-        }
+  // Если НЕ в наличии и нет фото — сразу предлагаем написать
+  if (p.status !== "in" && !hasImage) {
+    document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
+    contactMenu.classList.add("open");
+    return;
+  }
 
-        openLightbox(p, images);
-      });
+  // Если фото нет — тоже не открываем пустой lightbox
+  if (!hasImage) {
+    document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
+    contactMenu.classList.add("open");
+    return;
+  }
+
+  // В наличии + есть фото — открываем галерею
+  openLightbox(p, images);
+});
 
       inquireBtn.addEventListener("click", (e) => {
         e.stopPropagation();
