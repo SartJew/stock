@@ -634,6 +634,21 @@
     const q = currentQuery.toLowerCase().trim();
 
     const visible = products.filter(p => {
+      const statusRank = { in: 0, rsv: 1, out: 2 };
+
+visible.sort((a, b) => {
+  const ra = statusRank[a.status] ?? 9;
+  const rb = statusRank[b.status] ?? 9;
+  if (ra !== rb) return ra - rb;
+
+  // вторичная сортировка (чтобы было стабильно): бренд → ref → name
+  const ba = (a.brand || "").localeCompare(b.brand || "", "ru");
+  if (ba !== 0) return ba;
+  const ra2 = (a.ref || "").localeCompare(b.ref || "", "ru");
+  if (ra2 !== 0) return ra2;
+  return (a.name || "").localeCompare(b.name || "", "ru");
+});
+
       if (currentBrand !== "all" && p.brand !== currentBrand) return false;
       if (q) {
         const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
@@ -671,11 +686,12 @@
         : "Фото<br>по запросу";
 
       const message = encodeURIComponent(
-        "Данил, привет! Хочу уточнить по наличию:\n\n" +
-        `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
-        (p.set ? `Комплект: ${p.set}\n` : "") +
-        (p.price ? `Цена: ${p.price}\n` : "")
-      );
+  "Данил, привет! Хочу уточнить:\n\n" +
+  `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
+  (p.set ? `Комплект: ${p.set}\n` : "") +
+  (p.status === "out" ? "" : (p.price ? `Цена: ${p.price}\n` : ""))
+);
+
 
       const telegramUrl = `https://t.me/TheSart?text=${message}`;
       const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
@@ -686,6 +702,8 @@
 };
 
 const st = statusMap[p.status] || statusMap.out;
+      const showPrice = p.status !== "out";
+const priceHtml = showPrice && p.price ? p.price : "—";
 
       card.innerHTML = `
         <div class="card-inner">
@@ -701,7 +719,7 @@ const st = statusMap[p.status] || statusMap.out;
             </div>
             <div>
               <div class="price-row">
-                <div class="price">${p.price}</div>
+               <div class="price">${priceHtml}</div>
                 <div class="status ${st.className}">${st.text}</div>
               </div>
               <div class="card-actions">
