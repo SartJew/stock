@@ -491,310 +491,255 @@
   </div>
 
   <script>
-    // 1. ССЫЛКА НА GOOGLE SHEETS (CSV)
-    // ВСТАВЬ СЮДА свою working CSV-ссылку из таблицы
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQQWmPmYviO64ky1rYJn1CRfUfYtcp8xVO3vg_gm8qVB4fZJEumVPxjm1DkYCOtRWaXvRA2hvNY4mv/pub?gid=0&single=true&output=csv";
+  const SHEET_CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQQWmPmYviO64ky1rYJn1CRfUfYtcp8xVO3vg_gm8qVB4fZJEumVPxjm1DkYCOtRWaXvRA2hvNY4mv/pub?output=csv";
 
-    // 2. ЛОКАЛЬНЫЙ СТОК — РЕЗЕРВ, если таблица недоступна
-    const localProducts = [
-      { id: "r-126233-1", brand: "Rolex", ref: "126233VI", name: "Datejust 36 · green dial", year: "2023", condition: "New", set: "Full set", price: "19 900 $", status: "in_stock", image: "" }
-      // Остальные можешь не заполнять: это fallback
-    ];
+  const localProducts = [
+    { id: "r-126233-1", brand: "Rolex", ref: "126233VI", name: "Datejust 36 · green dial", year: "2023", condition: "New", set: "Full set", price: "19 900 $", status: "in_stock", image: "" }
+  ];
 
-    let products = [];
-    let currentBrand = "all";
-    let currentQuery = "";
+  let products = [];
+  let currentBrand = "all";
+  let currentQuery = "";
 
-    const grid = document.getElementById("products-grid");
-    const filterButtons = document.querySelectorAll(".filter-btn");
-    const metaInfo = document.getElementById("meta-info");
-    const searchInput = document.getElementById("search-input");
+  const grid = document.getElementById("products-grid");
+  const filterButtons = document.querySelectorAll(".filter-btn");
+  const metaInfo = document.getElementById("meta-info");
+  const searchInput = document.getElementById("search-input");
 
-    // Элементы лайтбокса
-    const lightbox = document.getElementById("lightbox");
-    const lbImg = document.getElementById("lb-img");
-    const lbTitle = document.getElementById("lb-title");
-    const lbRef = document.getElementById("lb-ref");
-    const lbCaption = document.getElementById("lb-caption");
-    const lbIndex = document.getElementById("lb-index");
-    const lbClose = document.getElementById("lb-close");
-    const lbPrev = document.getElementById("lb-prev");
-    const lbNext = document.getElementById("lb-next");
+  // --- CSV парсер (устойчив к запятым/кавычкам/переносам) ---
+  function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
 
-    let currentImages = [];
-    let currentImageIndex = 0;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      const next = text[i + 1];
 
-    function normalizeProducts(list) {
-      return list.map((p, idx) => {
-        if (!p.id || !p.id.trim()) {
-          const baseBrand = (p.brand || "item").toLowerCase().replace(/\s+/g, "-");
-          const baseRef = (p.ref || "ref").toLowerCase().replace(/\s+/g, "-");
-          p.id = `auto-${baseBrand}-${baseRef}-${idx + 1}`;
-        }
-        return p;
-      });
-    }
-
-    async function loadFromSheet() {
-      if (!SHEET_CSV_URL || SHEET_CSV_URL === "ПОДСТАВЬ_СЮДА_СВОЮ_CSV_ССЫЛКУ") {
-        products = normalizeProducts(localProducts);
-        applyFilters();
-        return;
+      if (inQuotes) {
+        if (c === '"' && next === '"') { cell += '"'; i++; continue; }
+        if (c === '"') { inQuotes = false; continue; }
+        cell += c;
+        continue;
       }
-      try {
-        const res = await fetch(SHEET_CSV_URL);
-        const text = await res.text();
-        const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-        const header = lines.shift().split(",");
 
-        const getIndex = name => header.indexOf(name);
+      if (c === '"') { inQuotes = true; continue; }
+      if (c === ",") { row.push(cell); cell = ""; continue; }
+      if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; continue; }
+      if (c === "\r") continue;
 
-        const idx = {
-          id:        getIndex("id"),
-          brand:     getIndex("brand"),
-          ref:       getIndex("ref"),
-          name:      getIndex("name"),
-          year:      getIndex("year"),
-          condition: getIndex("condition"),
-          set:       getIndex("set"),
-          price:     getIndex("price"),
-          status:    getIndex("status"),
-          image:     getIndex("image")
-        };
-
-        const parsed = lines.map((line, rowIndex) => {
-          const cols = line.split(","); // поэтому внутри ячеек НЕ должно быть запятых
-          const obj = {
-            id:        idx.id        >= 0 ? (cols[idx.id]        || "").trim() : "",
-            brand:     idx.brand     >= 0 ? (cols[idx.brand]     || "").trim() : "",
-            ref:       idx.ref       >= 0 ? (cols[idx.ref]       || "").trim() : "",
-            name:      idx.name      >= 0 ? (cols[idx.name]      || "").trim() : "",
-            year:      idx.year      >= 0 ? (cols[idx.year]      || "").trim() : "",
-            condition: idx.condition >= 0 ? (cols[idx.condition] || "").trim() : "",
-            set:       idx.set       >= 0 ? (cols[idx.set]       || "").trim() : "",
-            price:     idx.price     >= 0 ? (cols[idx.price]     || "").trim() : "",
-            status:    idx.status    >= 0 ? (cols[idx.status]    || "").trim() : "",
-            image:     idx.image     >= 0 ? (cols[idx.image]     || "").trim() : ""
-          };
-          return obj;
-        });
-
-        products = normalizeProducts(parsed);
-        applyFilters();
-      } catch (e) {
-        console.error("Ошибка загрузки Google Sheets, используем локальный сток", e);
-        products = normalizeProducts(localProducts);
-        applyFilters();
-      }
+      cell += c;
     }
 
-function applyFilters() {
-  grid.innerHTML = "";
-
-  const q = currentQuery.toLowerCase().trim();
-
-  const visible = products.filter(p => {
-    if (p.status !== "in_stock") return false;
-    if (currentBrand !== "all" && p.brand !== currentBrand) return false;
-    if (q) {
-      const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-    return true;
-  });
-
-  if (visible.length === 0) {
-    grid.innerHTML = "<div style='font-size:13px;color:#888;'>Нет лотов в наличии по заданным условиям.</div>";
-    metaInfo.textContent = "Ничего не найдено. Проверьте фильтр бренда или запрос в поиске.";
-    return;
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    return rows;
   }
 
-  metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.`;
+  function norm(s) {
+    return (s || "").toString().trim();
+  }
 
-  visible.forEach(p => {
-    const card = document.createElement("div");
-    card.className = "card";
+  function normStatus(s) {
+    return norm(s).toLowerCase().replace(/\s+/g, "_");
+  }
 
-    const detailsLine = [
-      "Год: " + (p.year || "—"),
-      "Состояние: " + (p.condition || "—"),
-      "Комплект: " + (p.set || "—")
-    ].join(" · ");
+  function normalizeProducts(list) {
+    return list.map((p, idx) => {
+      const brand = norm(p.brand);
+      const ref = norm(p.ref);
+      const id = norm(p.id);
+      return {
+        ...p,
+        brand,
+        ref,
+        id: id || `auto-${brand.toLowerCase().replace(/\s+/g, "-")}-${ref.toLowerCase().replace(/\s+/g, "-")}-${idx + 1}`,
+        status: normStatus(p.status),
+        image: norm(p.image)
+      };
+    });
+  }
 
-    const images = (p.image || "")
-      .split("|")
-      .map(x => x.trim())
-      .filter(x => x.length > 3);
+  async function loadFromSheet() {
+    try {
+      const res = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("CSV fetch failed: " + res.status);
+      const text = await res.text();
 
-    const hasImage = images.length > 0;
-    const thumbHtml = hasImage
-      ? `<img src="${images[0]}" alt="${p.name}">`
-      : "Фото<br>по запросу";
+      const table = parseCSV(text).filter(r => r.some(x => norm(x).length));
+      if (!table.length) throw new Error("Empty CSV");
 
-    const message = encodeURIComponent(
-      "Данил, привет! Хочу уточнить по наличию:\n\n" +
-      `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
-      (p.set ? `Комплект: ${p.set}\n` : "") +
-      (p.price ? `Цена: ${p.price}\n` : "") 
-    );
+      const header = table.shift().map(h => norm(h));
+      const col = (name) => header.indexOf(name);
 
-    const telegramUrl = `https://t.me/TheSart?text=${message}`;
-    const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
+      // ожидаемые колонки: id, brand, ref, name, year, condition, set, price, status, image
+      const idx = {
+        id: col("id"),
+        brand: col("brand"),
+        ref: col("ref"),
+        name: col("name"),
+        year: col("year"),
+        condition: col("condition"),
+        set: col("set"),
+        price: col("price"),
+        status: col("status"),
+        image: col("image")
+      };
 
-    card.innerHTML = `
-      <div class="card-inner">
-        <div class="thumb ${hasImage ? "" : "empty-text"}">
-          ${thumbHtml}
-        </div>
-        <div class="card-body">
-          <div>
-            <div class="card-header">
-              <div class="brand">${p.brand}</div>
-              <div class="ref">${p.ref}</div>
+      const parsed = table.map(cols => ({
+        id:        idx.id        >= 0 ? norm(cols[idx.id])        : "",
+        brand:     idx.brand     >= 0 ? norm(cols[idx.brand])     : "",
+        ref:       idx.ref       >= 0 ? norm(cols[idx.ref])       : "",
+        name:      idx.name      >= 0 ? norm(cols[idx.name])      : "",
+        year:      idx.year      >= 0 ? norm(cols[idx.year])      : "",
+        condition: idx.condition >= 0 ? norm(cols[idx.condition]) : "",
+        set:       idx.set       >= 0 ? norm(cols[idx.set])       : "",
+        price:     idx.price     >= 0 ? norm(cols[idx.price])     : "",
+        status:    idx.status    >= 0 ? norm(cols[idx.status])    : "in_stock",
+        image:     idx.image     >= 0 ? norm(cols[idx.image])     : ""
+      }));
+
+      products = normalizeProducts(parsed);
+      applyFilters();
+    } catch (e) {
+      console.error("Ошибка загрузки/парсинга CSV, использую fallback", e);
+      products = normalizeProducts(localProducts);
+      applyFilters();
+    }
+  }
+
+  function applyFilters() {
+    grid.innerHTML = "";
+
+    const q = currentQuery.toLowerCase().trim();
+
+    const visible = products.filter(p => {
+      if (p.status && p.status !== "in_stock") return false;
+      if (currentBrand !== "all" && p.brand !== currentBrand) return false;
+      if (q) {
+        const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (visible.length === 0) {
+      grid.innerHTML = "<div style='font-size:13px;color:#888;'>Нет лотов в наличии по заданным условиям.</div>";
+      metaInfo.textContent = "Ничего не найдено. Проверьте фильтр бренда или запрос в поиске.";
+      return;
+    }
+
+    metaInfo.textContent = `Показано лотов: ${visible.length}. Бренд: ${currentBrand === "all" ? "все" : currentBrand}.`;
+
+    visible.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const detailsLine = [
+        "Год: " + (p.year || "—"),
+        "Состояние: " + (p.condition || "—"),
+        "Комплект: " + (p.set || "—")
+      ].join(" · ");
+
+      const images = (p.image || "")
+        .split("|")
+        .map(x => x.trim())
+        .filter(x => x.length > 3);
+
+      const hasImage = images.length > 0;
+      const thumbHtml = hasImage
+        ? `<img src="${images[0]}" alt="${p.name}">`
+        : "Фото<br>по запросу";
+
+      const message = encodeURIComponent(
+        "Данил, привет! Хочу уточнить по наличию:\n\n" +
+        `${p.brand || ""} ${p.ref || ""} — ${p.name || ""}\n` +
+        (p.set ? `Комплект: ${p.set}\n` : "") +
+        (p.price ? `Цена: ${p.price}\n` : "")
+      );
+
+      const telegramUrl = `https://t.me/TheSart?text=${message}`;
+      const whatsappUrl = `https://wa.me/79260333480?text=${message}`;
+
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="thumb ${hasImage ? "" : "empty-text"}">${thumbHtml}</div>
+          <div class="card-body">
+            <div>
+              <div class="card-header">
+                <div class="brand">${p.brand}</div>
+                <div class="ref">${p.ref}</div>
+              </div>
+              <div class="name">${p.name}</div>
+              <div class="lot-meta">${detailsLine}</div>
             </div>
-            <div class="name">${p.name}</div>
-            <div class="lot-meta">${detailsLine}</div>
-          </div>
-          <div>
-            <div class="price-row">
-              <div class="price">${p.price}</div>
-              <div class="status">в наличии</div>
-            </div>
-            <div class="card-actions">
-              <button type="button" class="btn-inquire">Уточнить</button>
-              <div class="contact-menu">
-                <a href="${telegramUrl}" target="_blank" class="contact-link">Telegram</a>
-                <a href="${whatsappUrl}" target="_blank" class="contact-link">WhatsApp</a>
+            <div>
+              <div class="price-row">
+                <div class="price">${p.price}</div>
+                <div class="status">в наличии</div>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="btn-inquire">Уточнить</button>
+                <div class="contact-menu">
+                  <a rel="noopener noreferrer" href="${telegramUrl}" target="_blank" class="contact-link">Telegram</a>
+                  <a rel="noopener noreferrer" href="${whatsappUrl}" target="_blank" class="contact-link">WhatsApp</a>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
 
-    const inquireBtn = card.querySelector(".btn-inquire");
-    const contactMenu = card.querySelector(".contact-menu");
+      const inquireBtn = card.querySelector(".btn-inquire");
+      const contactMenu = card.querySelector(".contact-menu");
 
-    card.addEventListener("click", (e) => {
-      if (e.target.closest(".btn-inquire") || e.target.closest(".contact-menu")) {
-        return;
-      }
-      if (!hasImage) {
-        openLightbox(p, []);
-      } else {
+      card.addEventListener("click", (e) => {
+        if (e.target.closest(".btn-inquire") || e.target.closest(".contact-menu")) return;
+
+        // если фото нет — сразу открыть контакты, а не пустой lightbox
+        if (!hasImage) {
+          document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
+          contactMenu.classList.add("open");
+          return;
+        }
+
         openLightbox(p, images);
-      }
-    });
-
-    inquireBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = contactMenu.classList.contains("open");
-      document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
-      if (!isOpen) {
-        contactMenu.classList.add("open");
-      }
-    });
-
-    contactMenu.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-
-    grid.appendChild(card);
-  });
-}
-
-    function openLightbox(product, images) {
-      currentImages = images;
-      currentImageIndex = 0;
-
-      lbTitle.textContent = product.brand + " · " + product.name;
-      lbRef.textContent = product.ref ? "Ref: " + product.ref : "";
-      lbCaption.textContent = [
-        product.year ? "Год: " + product.year : "",
-        product.condition ? "Состояние: " + product.condition : "",
-        product.set ? "Комплект: " + product.set : ""
-      ].filter(Boolean).join(" · ");
-
-      if (currentImages.length === 0) {
-        lbImg.src = "";
-        lbImg.alt = "";
-        lbIndex.textContent = "Фото по запросу";
-        lbPrev.style.visibility = "hidden";
-        lbNext.style.visibility = "hidden";
-      } else {
-        showLightboxImage(0);
-        lbPrev.style.visibility = currentImages.length > 1 ? "visible" : "hidden";
-        lbNext.style.visibility = currentImages.length > 1 ? "visible" : "hidden";
-      }
-
-      lightbox.classList.add("visible");
-    }
-
-    function showLightboxImage(index) {
-      if (!currentImages.length) return;
-      if (index < 0) index = currentImages.length - 1;
-      if (index >= currentImages.length) index = 0;
-      currentImageIndex = index;
-
-      lbImg.src = currentImages[currentImageIndex];
-      lbImg.alt = "";
-      lbIndex.textContent = `${currentImageIndex + 1} / ${currentImages.length}`;
-    }
-
-    function closeLightbox() {
-      lightbox.classList.remove("visible");
-      currentImages = [];
-      currentImageIndex = 0;
-    }
-
-    lbClose.addEventListener("click", closeLightbox);
-    lbPrev.addEventListener("click", () => {
-      if (currentImages.length > 1) {
-        showLightboxImage(currentImageIndex - 1);
-      }
-    });
-    lbNext.addEventListener("click", () => {
-      if (currentImages.length > 1) {
-        showLightboxImage(currentImageIndex + 1);
-      }
-    });
-
-    lightbox.addEventListener("click", (e) => {
-      if (e.target === lightbox) {
-        closeLightbox();
-      }
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (!lightbox.classList.contains("visible")) return;
-      if (e.key === "Escape") {
-        closeLightbox();
-      } else if (e.key === "ArrowLeft") {
-        if (currentImages.length > 1) showLightboxImage(currentImageIndex - 1);
-      } else if (e.key === "ArrowRight") {
-        if (currentImages.length > 1) showLightboxImage(currentImageIndex + 1);
-      }
-    });
-
-    filterButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        filterButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentBrand = btn.getAttribute("data-brand");
-        applyFilters();
       });
-    });
 
-    searchInput.addEventListener("input", () => {
-      currentQuery = searchInput.value;
+      inquireBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = contactMenu.classList.contains("open");
+        document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
+        if (!isOpen) contactMenu.classList.add("open");
+      });
+
+      contactMenu.addEventListener("click", (e) => e.stopPropagation());
+
+      grid.appendChild(card);
+    });
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentBrand = btn.getAttribute("data-brand");
       applyFilters();
     });
-// Закрыть меню Telegram/WhatsApp при клике в любое место
-document.addEventListener("click", () => {
-  document.querySelectorAll(".contact-menu.open")
-    .forEach(m => m.classList.remove("open"));
-});
-    loadFromSheet();
-  </script>
+  });
+
+  searchInput.addEventListener("input", () => {
+    currentQuery = searchInput.value;
+    applyFilters();
+  });
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".contact-menu.open").forEach(m => m.classList.remove("open"));
+  });
+
+  loadFromSheet();
+</script>
+
 </body>
 </html>
