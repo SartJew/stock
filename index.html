@@ -634,7 +634,15 @@
     const q = currentQuery.toLowerCase().trim();
 
     const visible = products.filter(p => {
-      const statusRank = { in: 0, rsv: 1, out: 2 };
+    
+      if (currentBrand !== "all" && p.brand !== currentBrand) return false;
+      if (q) {
+        const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+     const statusRank = { in: 0, rsv: 1, out: 2 };
 
 visible.sort((a, b) => {
   const ra = statusRank[a.status] ?? 9;
@@ -648,14 +656,6 @@ visible.sort((a, b) => {
   if (ra2 !== 0) return ra2;
   return (a.name || "").localeCompare(b.name || "", "ru");
 });
-
-      if (currentBrand !== "all" && p.brand !== currentBrand) return false;
-      if (q) {
-        const haystack = (p.brand + " " + p.ref + " " + p.name).toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
-      return true;
-    });
 
     if (visible.length === 0) {
       grid.innerHTML = "<div style='font-size:13px;color:#888;'>Нет лотов в наличии по заданным условиям.</div>";
